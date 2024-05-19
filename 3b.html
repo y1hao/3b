@@ -20,17 +20,15 @@
       .item {
         position: fixed;
         border-radius: 50%;
+        background-color: white;
       }
       #a {
-        background-color: white;
         box-shadow: 0 0 10px 3px rgb(255, 120, 120);
       }
       #b {
-        background-color: white;
         box-shadow: 0 0 10px 3px rgb(120, 255, 120);
       }
       #c {
-        background-color: white;
         box-shadow: 0 0 10px 3px rgb(255, 255, 120);
       }
     </style>
@@ -42,6 +40,8 @@
       <div class="item" id="c" draggable="true" />
     </div>
     <script>
+      const refreshInterval = 5;
+      const sizeRatio = 0.7;
       const itemSize = 15;
       const maxSpeed = 3;
       const speedCoefficient = 1;
@@ -102,6 +102,12 @@
           this.draw();
         }
 
+        updatePosition() {
+          this.top += speedCoefficient * this.vy;
+          this.left += speedCoefficient * this.vx;
+          this.bounce(bounceCoefficient);
+        }
+
         updateSpeed(bodies) {
           bodies.forEach((body) => {
             if (body.id !== this.id) {
@@ -138,10 +144,28 @@
           });
         }
 
-        updatePosition() {
-          this.top += speedCoefficient * this.vy;
-          this.left += speedCoefficient * this.vx;
-          this.bounce(bounceCoefficient);
+        bounce(speedRemainingRatio) {
+          if (this.top > availableSize) {
+            const diff = this.top - availableSize;
+            this.top = availableSize - diff;
+            this.vy = -this.vy;
+            this.vy *= speedRemainingRatio;
+          } else if (this.top < 0) {
+            this.top = -this.top;
+            this.vy = -this.vy;
+            this.vy *= speedRemainingRatio;
+          }
+
+          if (this.left > availableSize) {
+            const diff = this.left - availableSize;
+            this.left = availableSize - diff;
+            this.vx = -this.vx;
+            this.vx *= speedRemainingRatio;
+          } else if (this.left < 0) {
+            this.left = -this.left;
+            this.vx = -this.vx;
+            this.vx *= speedRemainingRatio;
+          }
         }
 
         stop() {
@@ -149,47 +173,23 @@
           this.vy = 0;
         }
 
-        bounce(k) {
-          if (this.top > availableSize) {
-            const diff = this.top - availableSize;
-            this.top = availableSize - diff;
-            this.vy = -this.vy;
-            this.vy *= k;
-          } else if (this.top < 0) {
-            this.top = -this.top;
-            this.vy = -this.vy;
-            this.vy *= k;
-          }
-
-          if (this.left > availableSize) {
-            const diff = this.left - availableSize;
-            this.left = availableSize - diff;
-            this.vx = -this.vx;
-            this.vx *= k;
-          } else if (this.left < 0) {
-            this.left = -this.left;
-            this.vx = -this.vx;
-            this.vx *= k;
-          }
-        }
-
         draw() {
-          this.item.style.top = `${topBase + this.top - itemSize / 2}px`;
-          this.item.style.left = `${leftBase + this.left - itemSize / 2}px`;
+          this.item.style.top = `${topBase + this.top}px`;
+          this.item.style.left = `${leftBase + this.left}px`;
         }
       }
 
       function initPosition() {
         const vw = window.innerWidth;
         const vh = window.innerHeight;
-        size = 0.7 * Math.min(vw, vh);
+        size = sizeRatio * Math.min(vw, vh);
         availableSize = size - itemSize;
 
         container.style.height = `${size}px`;
         container.style.width = `${size}px`;
 
-        topBase = container.offsetTop + itemSize / 2;
-        leftBase = container.offsetLeft + itemSize / 2;
+        topBase = container.offsetTop;
+        leftBase = container.offsetLeft;
       }
 
       function initBodies() {
@@ -221,7 +221,7 @@
       }
 
       function start() {
-        intervalHandle = setInterval(next, 5);
+        intervalHandle = setInterval(next, refreshInterval);
       }
 
       function stop() {
