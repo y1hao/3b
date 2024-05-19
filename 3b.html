@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3b</title>
+    <style>
+      body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: white;
+      }
+      #container {
+        margin: auto;
+        background-color: rgb(5, 5, 5);
+      }
+      .item {
+        position: fixed;
+        border-radius: 50%;
+      }
+      #a {
+        background-color: white;
+        box-shadow: 0 0 10px 3px rgb(255, 120, 120);
+      }
+      #b {
+        background-color: white;
+        box-shadow: 0 0 10px 3px rgb(120, 255, 120);
+      }
+      #c {
+        background-color: white;
+        box-shadow: 0 0 10px 3px rgb(255, 255, 120);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container">
+      <div class="item" id="a" draggable="true" />
+      <div class="item" id="b" draggable="true" />
+      <div class="item" id="c" draggable="true" />
+    </div>
+    <script>
+      const itemSize = 15;
+      const coefficient = 10;
+      const maxSpeed = 3;
+      const bounceCoefficient = 0.5;
+      const container = document.getElementById("container");
+      const body = document.getElementsByTagName("body")[0];
+
+      let size;
+      let availableSize;
+      let topBase;
+      let leftBase;
+      let handle;
+      let items;
+
+      class Item {
+        constructor(id, top, left) {
+          this.id = id;
+          this.item = document.getElementById(id);
+          this.item.style.height = `${itemSize}px`;
+          this.item.style.width = `${itemSize}px`;
+          this.top = top;
+          this.left = left;
+          this.vx = 0;
+          this.vy = 0;
+          this.item.onmousedown = this.onMouseDown.bind(this);
+          this.item.onclick = this.onClick.bind(this);
+        }
+
+        onClick(e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+
+        onMouseDown(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          this.startX = e.clientX;
+          this.startY = e.clientY;
+          document.onmouseup = this.onMouseUp.bind(this);
+          document.onmousemove = this.onMouseMove.bind(this);
+        }
+
+        onMouseUp(e) {
+          document.onmouseup = null;
+          document.onmousemove = null;
+        }
+
+        onMouseMove(e) {
+          e.preventDefault();
+          const movedX = e.clientX - this.startX;
+          const movedY = e.clientY - this.startY;
+          this.startX = e.clientX;
+          this.startY = e.clientY;
+          this.top += movedY;
+          this.left += movedX;
+          this.bounce(0);
+          this.draw();
+        }
+
+        updateSpeed(items) {
+          items.forEach((i) => {
+            if (i.id !== this.id) {
+              const dy = i.top - this.top;
+              const dx = i.left - this.left;
+              const sy = dy > 0 ? 1 : -1;
+              const sx = dx > 0 ? 1 : -1;
+              if (dy === 0 && dx === 0) {
+                return;
+              }
+              if (dx === 0) {
+                this.vy += (sy * coefficient) / (dy * dy);
+              } else if (dy === 0) {
+                this.vx += (sx * coefficient) / (dx * dx);
+              } else {
+                const r = Math.abs(dy / dx);
+                const d2 = dy * dy + dx * dx;
+                const x = Math.sqrt(1 / (r * r + 1));
+                const y = r * x;
+                this.vy += (sy * (coefficient * y)) / d2;
+                this.vx += (sx * (coefficient * x)) / d2;
+              }
+              if (this.vy > maxSpeed) {
+                this.vy = maxSpeed;
+              } else if (this.vy < -maxSpeed) {
+                this.vy = -maxSpeed;
+              }
+              if (this.vx > maxSpeed) {
+                this.vx = maxSpeed;
+              } else if (this.vx < -maxSpeed) {
+                this.vx = -maxSpeed;
+              }
+            }
+          });
+        }
+
+        stop() {
+          this.vx = 0;
+          this.vy = 0;
+        }
+
+        bounce(k) {
+          if (this.top > availableSize) {
+            const diff = this.top - availableSize;
+            this.top = availableSize - diff;
+            this.vy = -this.vy;
+            this.vy *= k;
+          } else if (this.top < 0) {
+            this.top = -this.top;
+            this.vy = -this.vy;
+            this.vy *= k;
+          }
+
+          if (this.left > availableSize) {
+            const diff = this.left - availableSize;
+            this.left = availableSize - diff;
+            this.vx = -this.vx;
+            this.vx *= k;
+          } else if (this.left < 0) {
+            this.left = -this.left;
+            this.vx = -this.vx;
+            this.vx *= k;
+          }
+        }
+
+        draw() {
+          this.item.style.top = `${topBase + this.top - itemSize / 2}px`;
+          this.item.style.left = `${leftBase + this.left - itemSize / 2}px`;
+        }
+      }
+
+      function initPosition() {
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        size = 0.7 * Math.min(vw, vh);
+        availableSize = size - itemSize;
+
+        container.style.height = `${size}px`;
+        container.style.width = `${size}px`;
+
+        topBase = container.offsetTop + itemSize / 2;
+        leftBase = container.offsetLeft + itemSize / 2;
+      }
+
+      function initItems() {
+        const a = new Item(
+          "a",
+          Math.random() * availableSize,
+          Math.random() * availableSize
+        );
+        const b = new Item(
+          "b",
+          Math.random() * availableSize,
+          Math.random() * availableSize
+        );
+        const c = new Item(
+          "c",
+          Math.random() * availableSize,
+          Math.random() * availableSize
+        );
+
+        items = [a, b, c];
+        items.forEach((i) => {
+          i.draw();
+        });
+      }
+
+      function next() {
+        items.forEach((i) => {
+          i.updateSpeed(items);
+          i.top += i.vy;
+          i.left += i.vx;
+          i.bounce(bounceCoefficient);
+          i.draw();
+        });
+      }
+
+      function start() {
+        handle = setInterval(next, 5);
+      }
+
+      function stop() {
+        if (handle) {
+          clearInterval(handle);
+          handle = undefined;
+        }
+        items.forEach((i) => i.stop());
+      }
+
+      function toggle(e) {
+        e.preventDefault();
+        handle ? stop() : start();
+      }
+
+      function resize() {
+        stop();
+        initPosition();
+      }
+      
+      initPosition();
+      initItems();
+      body.addEventListener("click", toggle);
+      window.addEventListener("resize", resize);
+
+    </script>
+  </body>
+</html>
