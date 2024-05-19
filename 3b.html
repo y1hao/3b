@@ -48,16 +48,16 @@
       const gravityCoefficient = 10;
       const bounceCoefficient = 0.5;
       const container = document.getElementById("container");
-      const body = document.getElementsByTagName("body")[0];
+      const docBody = document.getElementsByTagName("body")[0];
 
       let size;
       let availableSize;
       let topBase;
       let leftBase;
-      let handle;
-      let items;
+      let intervalHandle;
+      let bodies;
 
-      class Item {
+      class Body {
         constructor(id, top, left) {
           this.id = id;
           this.item = document.getElementById(id);
@@ -102,11 +102,11 @@
           this.draw();
         }
 
-        updateSpeed(items) {
-          items.forEach((i) => {
-            if (i.id !== this.id) {
-              const dy = i.top - this.top;
-              const dx = i.left - this.left;
+        updateSpeed(bodies) {
+          bodies.forEach((body) => {
+            if (body.id !== this.id) {
+              const dy = body.top - this.top;
+              const dx = body.left - this.left;
               const sy = dy > 0 ? 1 : -1;
               const sx = dx > 0 ? 1 : -1;
               if (dy === 0 && dx === 0) {
@@ -192,49 +192,49 @@
         leftBase = container.offsetLeft + itemSize / 2;
       }
 
-      function initItems() {
-        const a = new Item(
+      function initBodies() {
+        const a = new Body(
           "a",
           Math.random() * availableSize,
           Math.random() * availableSize
         );
-        const b = new Item(
+        const b = new Body(
           "b",
           Math.random() * availableSize,
           Math.random() * availableSize
         );
-        const c = new Item(
+        const c = new Body(
           "c",
           Math.random() * availableSize,
           Math.random() * availableSize
         );
 
-        items = [a, b, c];
+        bodies = [a, b, c];
       }
 
       function next() {
-        items.forEach((i) => {
-          i.updateSpeed(items);
-          i.updatePosition();
-          i.draw();
+        bodies.forEach((body) => {
+          body.updateSpeed(bodies);
+          body.updatePosition();
+          body.draw();
         });
       }
 
       function start() {
-        handle = setInterval(next, 5);
+        intervalHandle = setInterval(next, 5);
       }
 
       function stop() {
-        if (handle) {
-          clearInterval(handle);
-          handle = undefined;
+        if (intervalHandle) {
+          clearInterval(intervalHandle);
+          intervalHandle = undefined;
         }
-        items.forEach((i) => i.stop());
+        bodies.forEach((body) => body.stop());
       }
 
       function toggle(e) {
         e.preventDefault();
-        handle ? stop() : start();
+        intervalHandle ? stop() : start();
       }
 
       function resize() {
@@ -243,13 +243,12 @@
       }
       
       initPosition();
-      initItems();
-      items.forEach((i) => {
-        i.draw();
+      initBodies();
+      bodies.forEach((body) => {
+        body.draw();
       });
-      body.addEventListener("click", toggle);
+      docBody.addEventListener("click", toggle);
       window.addEventListener("resize", resize);
-
     </script>
   </body>
 </html>
