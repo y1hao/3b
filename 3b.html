@@ -43,8 +43,9 @@
     </div>
     <script>
       const itemSize = 15;
-      const coefficient = 10;
       const maxSpeed = 3;
+      const speedCoefficient = 1;
+      const gravityCoefficient = 10;
       const bounceCoefficient = 0.5;
       const container = document.getElementById("container");
       const body = document.getElementsByTagName("body")[0];
@@ -112,16 +113,16 @@
                 return;
               }
               if (dx === 0) {
-                this.vy += (sy * coefficient) / (dy * dy);
+                this.vy += (sy * gravityCoefficient) / (dy * dy);
               } else if (dy === 0) {
-                this.vx += (sx * coefficient) / (dx * dx);
+                this.vx += (sx * gravityCoefficient) / (dx * dx);
               } else {
                 const r = Math.abs(dy / dx);
                 const d2 = dy * dy + dx * dx;
                 const x = Math.sqrt(1 / (r * r + 1));
                 const y = r * x;
-                this.vy += (sy * (coefficient * y)) / d2;
-                this.vx += (sx * (coefficient * x)) / d2;
+                this.vy += (sy * (gravityCoefficient * y)) / d2;
+                this.vx += (sx * (gravityCoefficient * x)) / d2;
               }
               if (this.vy > maxSpeed) {
                 this.vy = maxSpeed;
@@ -135,6 +136,12 @@
               }
             }
           });
+        }
+
+        updatePosition() {
+          this.top += speedCoefficient * this.vy;
+          this.left += speedCoefficient * this.vx;
+          this.bounce(bounceCoefficient);
         }
 
         stop() {
@@ -203,17 +210,12 @@
         );
 
         items = [a, b, c];
-        items.forEach((i) => {
-          i.draw();
-        });
       }
 
       function next() {
         items.forEach((i) => {
           i.updateSpeed(items);
-          i.top += i.vy;
-          i.left += i.vx;
-          i.bounce(bounceCoefficient);
+          i.updatePosition();
           i.draw();
         });
       }
@@ -242,6 +244,9 @@
       
       initPosition();
       initItems();
+      items.forEach((i) => {
+        i.draw();
+      });
       body.addEventListener("click", toggle);
       window.addEventListener("resize", resize);
 
