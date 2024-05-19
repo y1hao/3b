@@ -130,18 +130,22 @@
                 this.vy += (sy * (gravityCoefficient * y)) / d2;
                 this.vx += (sx * (gravityCoefficient * x)) / d2;
               }
-              if (this.vy > maxSpeed) {
-                this.vy = maxSpeed;
-              } else if (this.vy < -maxSpeed) {
-                this.vy = -maxSpeed;
-              }
-              if (this.vx > maxSpeed) {
-                this.vx = maxSpeed;
-              } else if (this.vx < -maxSpeed) {
-                this.vx = -maxSpeed;
-              }
             }
           });
+          this.limitSpeed();
+        }
+
+        limitSpeed() {
+          if (this.vy > maxSpeed) {
+            this.vy = maxSpeed;
+          } else if (this.vy < -maxSpeed) {
+            this.vy = -maxSpeed;
+          }
+          if (this.vx > maxSpeed) {
+            this.vx = maxSpeed;
+          } else if (this.vx < -maxSpeed) {
+            this.vx = -maxSpeed;
+          }
         }
 
         bounce(speedRemainingRatio) {
@@ -241,7 +245,7 @@
         stop();
         initPosition();
       }
-      
+
       initPosition();
       initBodies();
       bodies.forEach((body) => {
